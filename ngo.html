@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartAllocation | NGO Survey Input</title>
+    <meta name="description" content="SmartAllocation NGO survey input form for submitting resource allocation data." />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet CSS CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-gray-950 text-white min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between shadow-lg">
+      <div class="flex items-center gap-3">
+        <span class="text-emerald-400 text-2xl font-bold tracking-tight">SmartAllocation</span>
+        <span class="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full px-2 py-0.5">NGO Survey</span>
+      </div>
+      <nav class="flex gap-4">
+        <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">Dashboard</a>
+        <a href="ngo.html" class="text-sm text-blue-400 font-medium border-b border-blue-400 pb-0.5">NGO Survey</a>
+        <a href="register.html" class="text-sm text-gray-400 hover:text-white transition-colors">Register NGO</a>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center justify-center gap-8 p-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-bold text-white mb-2">Hello, World! 📋</h1>
+        <p class="text-gray-400 text-lg">Welcome to the SmartAllocation NGO Survey Portal.</p>
+        <p class="text-gray-500 text-sm mt-1">Use the form below to submit your organization's resource data.</p>
+      </div>
+
+      <!-- Section A: Submit Survey -->
+      <div id="content-survey" class="w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col gap-6">
+        <h2 class="text-xl font-semibold text-white">Share your Resource Needs</h2>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-gray-300" for="ngo-name-select">Select Organization</label>
+          <select
+            id="ngo-name-select"
+            class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors"
+          >
+            <option value="" disabled selected>Loading organizations...</option>
+          </select>
+          <p class="text-xs text-gray-500 mt-1">Don't see your NGO? <a href="register.html" class="text-blue-400 hover:underline font-medium">Add it to the map here</a>.</p>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-gray-300" for="ngo-region">Region / District (Auto-fill)</label>
+          <input
+            id="ngo-region"
+            type="text"
+            readonly
+            placeholder="Select an NGO to see region"
+            class="bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-gray-500 cursor-not-allowed"
+          />
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-gray-300" for="ngo-needs">Resource Needs</label>
+          <textarea
+            id="ngo-needs"
+            rows="4"
+            placeholder="Describe the resources or support your organization requires..."
+            class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+          ></textarea>
+        </div>
+
+        <button
+          id="submit-survey"
+          type="button"
+          class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
+        >
+          Submit Survey
+        </button>
+
+        <p id="survey-status" class="text-sm text-gray-500 text-center hidden">Submitting...</p>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-80"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-700 text-center py-3 text-gray-600 text-xs">
+      SmartAllocation &copy; 2026 &mdash; Powered by Midstral, Supabase &amp; Leaflet
+    </footer>
+
+
+    <!-- Leaflet JS CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Configuration (API Keys - Excluded from Git) -->
+    <script src="config.js"></script>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartAllocation | Register NGO</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Leaflet CSS CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-gray-950 text-white min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between shadow-lg">
+      <div class="flex items-center gap-3">
+        <span class="text-emerald-400 text-2xl font-bold tracking-tight">SmartAllocation</span>
+        <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full px-2 py-0.5">Registration</span>
+      </div>
+      <nav class="flex gap-4">
+        <a href="index.html" class="text-sm text-gray-400 hover:text-white transition-colors">Dashboard</a>
+        <a href="ngo.html" class="text-sm text-gray-400 hover:text-white transition-colors">NGO Survey</a>
+        <a href="register.html" class="text-sm text-blue-400 font-medium border-b border-blue-400 pb-0.5">Register NGO</a>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center justify-center gap-6 p-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-bold text-white mb-2">Join the Network 🌍</h1>
+        <p class="text-gray-400 text-lg">Register your organization to start receiving smart-matched resources.</p>
+      </div>
+
+      <div class="w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-2xl shadow-xl p-8 flex flex-col gap-6">
+        <h2 class="text-xl font-semibold text-white">Create NGO profile</h2>
+        
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-gray-300" for="reg-name">Organization Name</label>
+          <input id="reg-name" type="text" placeholder="e.g. Hope Foundation" class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" />
+        </div>
+
+        <div class="flex flex-col gap-4 md:flex-row">
+            <div class="flex-1 flex flex-col gap-1">
+                <label class="text-sm text-gray-300" for="reg-category">Category</label>
+                <select id="reg-category" class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors">
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Environment">Environment</option>
+                  <option value="Education">Education</option>
+                  <option value="Child Welfare">Child Welfare</option>
+                  <option value="Women Rights">Women Rights</option>
+                  <option value="Food Security">Food Security</option>
+                  <option value="Sanitation">Sanitation</option>
+                  <option value="General">General</option>
+                </select>
+            </div>
+            <div class="flex-1 flex flex-col gap-1">
+                <label class="text-sm text-gray-300" for="reg-region">Region / District</label>
+                <input id="reg-region" type="text" placeholder="e.g. Maharashtra" class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" />
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-gray-300">Headquarters Location (Click Map)</label>
+          <div id="registration-map" class="shadow-inner mt-1"></div>
+          <div class="flex gap-4 mt-2">
+            <div class="flex-1">
+              <label class="text-[10px] text-gray-500 uppercase font-bold">Latitude</label>
+              <input id="reg-lat" type="text" readonly class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-400" placeholder="0.0000" />
+            </div>
+            <div class="flex-1">
+              <label class="text-[10px] text-gray-500 uppercase font-bold">Longitude</label>
+              <input id="reg-lng" type="text" readonly class="w-full bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs text-gray-400" placeholder="0.0000" />
+            </div>
+          </div>
+        </div>
+
+        <button
+          id="submit-registration"
+          type="button"
+          class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
+        >
+          Complete Registration
+        </button>
+
+        <p id="reg-status" class="text-sm text-gray-500 text-center hidden">Registering...</p>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-80"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-700 text-center py-3 text-gray-600 text-xs">
+      SmartAllocation &copy; 2026 &mdash; Powered by Midstral, Supabase &amp; Leaflet
+    </footer>
+
+    <!-- Configuration (API Keys - Excluded from Git) -->
+    <script src="config.js"></script>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,259 @@
+/* ============================================================
+   SmartAllocation — Custom Styles (styles.css)
+   ============================================================ */
+
+/* ----- Minimal Base Reset (Tailwind preflight is disabled to fix Leaflet) ----- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; }
+body { line-height: inherit; }
+hr { height: 0; color: inherit; border-top-width: 1px; }
+abbr[title] { text-decoration: underline dotted; }
+h1,h2,h3,h4,h5,h6 { font-size: inherit; font-weight: inherit; }
+a { color: inherit; text-decoration: inherit; }
+b, strong { font-weight: bolder; }
+button, input, optgroup, select, textarea { font-family: inherit; font-size: 100%; font-weight: inherit; line-height: inherit; color: inherit; margin: 0; padding: 0; }
+button, select { text-transform: none; }
+button, [type='button'], [type='reset'], [type='submit'] { -webkit-appearance: button; background-color: transparent; background-image: none; }
+table { text-indent: 0; border-color: inherit; border-collapse: collapse; }
+input::placeholder, textarea::placeholder { opacity: 1; color: #9ca3af; }
+
+
+
+html {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ----- Leaflet Map Container ----- */
+#map {
+  z-index: 0;
+  min-height: 384px;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+
+/* ── Tailwind Preflight Compatibility Fixes ──────────────────────
+   Tailwind's preflight resets img display to 'block' and removes
+   borders/padding/margin from ALL elements – this breaks Leaflet.
+   These overrides restore Leaflet's required styles.
+   ----------------------------------------------------------------*/
+.leaflet-container img {
+  display: inline !important;
+  max-width: none !important;
+}
+
+.leaflet-tile {
+  display: block !important;
+}
+
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-pane > svg,
+.leaflet-pane > canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  position: absolute !important;
+  left: 0;
+  top: 0;
+}
+
+.leaflet-container {
+  overflow: hidden !important;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #1f2937;
+  color: #f9fafb;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  border-radius: 0.75rem;
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px;
+}
+
+.leaflet-popup-close-button {
+  color: #9ca3af !important;
+}
+
+
+/* ----- Custom Scrollbar ----- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111827; /* gray-900 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151; /* gray-700 */
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4B5563; /* gray-600 */
+}
+
+/* ----- Smooth Transitions on Interactive Elements ----- */
+a,
+button,
+input,
+textarea {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease-in-out;
+}
+
+/* ----- Input Focus Ring ----- */
+input:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4); /* blue-500/40 */
+}
+
+/* ----- Card Hover Lift Effect ----- */
+.card-hover {
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* ----- Animated Gradient Badge ----- */
+.gradient-badge {
+  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ----- High Affinity Match Pulse Animation ----- */
+@keyframes marker-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    transform: scale(1);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(16, 185, 129, 0);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    transform: scale(1);
+  }
+}
+
+.pulse-marker svg {
+  border-radius: 50%;
+  animation: marker-pulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+  transform: translateZ(0);
+  will-change: transform, box-shadow;
+}
+
+/* ----- Urgent Glow Pulse (Red) ----- */
+@keyframes urgent-glow-pulse {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(244, 63, 94, 0.7));
+    transform: scale(1);
+  }
+  70% {
+    filter: drop-shadow(0 0 15px rgba(244, 63, 94, 0));
+    transform: scale(1.1);
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(244, 63, 94, 0));
+    transform: scale(1);
+  }
+}
+
+.urgent-glow svg {
+  animation: urgent-glow-pulse 1.5s infinite ease-in-out;
+  transform: translateZ(0);
+  will-change: transform, filter;
+}
+
+/* ----- Toast Notification Animations ----- */
+@keyframes slide-in-toast {
+  from { opacity: 0; transform: translateY(100%) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slide-out-toast {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(100%) scale(0.95); }
+}
+
+.toast-enter {
+  animation: slide-in-toast 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+.toast-exit {
+  animation: slide-out-toast 0.3s cubic-bezier(0.8, 0.2, 1, 0.2) forwards;
+}
+
+
+/* ----- NGO Registration Map Picker ----- */
+#registration-map {
+  height: 300px;
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid #374151; /* gray-700 */
+}
+
+/* ----- Tabbed UI Helpers ----- */
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: flex;
+}
+
+.tab-btn {
+  border-bottom: 2px solid transparent;
+}
+.tab-btn.active {
+  color: #3b82f6; /* blue-500 */
+  border-color: #3b82f6;
+}
+
+/* ----- Sidebar Layout & Styling ----- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr 320px;
+  }
+}
+
+.urgent-need-card {
+  background: rgba(31, 41, 55, 0.5);
+  border: 1px solid rgba(55, 65, 81, 1);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+}
+
+.urgent-need-card:hover {
+  border-color: rgba(244, 63, 94, 0.5);
+  background: rgba(31, 41, 55, 0.8);
+}
+

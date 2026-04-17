@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartAllocation | Map Dashboard</title>
+    <meta name="description" content="SmartAllocation map dashboard for visualizing resource allocation and NGO survey data." />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Disable Tailwind preflight for img elements so Leaflet tiles render correctly
+      tailwind.config = {
+        corePlugins: {
+          preflight: false,
+        },
+      };
+    </script>
+
+    <!-- Leaflet CSS CDN (must come AFTER Tailwind to override preflight resets) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Leaflet + Tailwind Compatibility: inline overrides with highest specificity -->
+    <style>
+      /* Tailwind sets max-width:100% and height:auto on all img elements,
+         which shrinks Leaflet's 256×256 tiles to near-zero. Override it. */
+      .leaflet-container img { max-width: none !important; width: auto !important; height: auto !important; display: block; }
+      .leaflet-tile-pane img { max-width: none !important; }
+      .leaflet-pane > canvas,
+      .leaflet-pane > svg { position: absolute; left: 0; top: 0; }
+      .leaflet-container { font-family: 'Inter', sans-serif; }
+    </style>
+
+  </head>
+  <body class="bg-gray-950 text-white min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="bg-gray-900 border-b border-gray-700 px-6 py-4 flex items-center justify-between shadow-lg">
+      <div class="flex items-center gap-3">
+        <span class="text-emerald-400 text-2xl font-bold tracking-tight">SmartAllocation</span>
+        <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full px-2 py-0.5">Map Dashboard</span>
+      </div>
+      <nav class="flex gap-4">
+        <a href="index.html" class="text-sm text-emerald-400 font-medium border-b border-emerald-400 pb-0.5">Dashboard</a>
+        <a href="ngo.html" class="text-sm text-gray-400 hover:text-white transition-colors">NGO Survey</a>
+        <a href="register.html" class="text-sm text-gray-400 hover:text-white transition-colors">Register NGO</a>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center justify-center gap-8 p-8">
+      <div class="text-center w-full max-w-2xl">
+        <h1 class="text-4xl font-bold text-white mb-2">Hello, World! 🗺️</h1>
+        <p class="text-gray-400 text-lg">Welcome to the SmartAllocation Map Dashboard.</p>
+        <p class="text-gray-500 text-sm mt-1 mb-6">The interactive map will be rendered below.</p>
+        
+        <!-- Smart Search Bar -->
+        <div class="relative w-full mb-2 flex items-center gap-3">
+          <div class="relative w-full">
+          <input
+            id="smart-search-input"
+            type="text"
+            placeholder="Describe your skills or tools (e.g., I have a truck for deliveries)"
+            class="w-full bg-gray-900 border border-gray-600 rounded-full pl-5 pr-12 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-lg"
+          />
+          <button
+            id="smart-search-btn"
+            class="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 rounded-full transition-colors flex items-center justify-center"
+            title="AI Search"
+          >
+            <!-- Search Icon -->
+            <svg id="search-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <!-- Loading Spinner (Hidden by default) -->
+            <svg id="search-spinner" class="animate-spin h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+          </div>
+          
+          <!-- How it Works Tooltip -->
+          <div class="group relative flex-shrink-0">
+            <button class="w-12 h-12 bg-gray-800 border border-gray-700 rounded-full flex items-center justify-center text-gray-400 hover:text-white hover:border-emerald-500 transition-all font-bold">?</button>
+            <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-60 bg-gray-900 border border-gray-600 rounded-xl p-3 text-xs text-gray-300 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 pointer-events-none z-50 text-left">
+              <strong class="text-emerald-400 block mb-1">How it Works</strong>
+              Describe your skills! Our AI matches you against urgent NGO needs. Matches scoring over 60% will actively <strong>pulse</strong> on the map.
+            </div>
+          </div>
+        </div>
+        <p id="search-status" class="text-sm text-gray-500 min-h-[20px]"></p>
+      </div>
+
+      <!-- Dashboard Grid -->
+      <div class="dashboard-grid">
+        <!-- Main Map Area -->
+        <div class="flex flex-col gap-4">
+          <div
+            id="map"
+            class="w-full rounded-2xl border border-gray-700 shadow-xl bg-gray-800"
+            style="height: 520px;"
+          ></div>
+        </div>
+
+        <!-- Sidebar: Recent Urgent Needs -->
+        <aside class="flex flex-col gap-4">
+          <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-xl h-full">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+              Recent Urgent Needs
+            </h2>
+            <div id="urgent-needs-sidebar" class="flex flex-col gap-2 overflow-y-auto max-h-[460px] pr-2">
+              <!-- Dynamically populated -->
+              <div class="text-gray-500 text-sm italic">Loading latest needs...</div>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <!-- Status Card -->
+      <div class="flex gap-4 flex-wrap justify-center">
+        <div class="bg-gray-800 border border-gray-700 rounded-xl px-6 py-4 text-center">
+          <p id="count-ngos" class="text-emerald-400 text-2xl font-bold">…</p>
+          <p class="text-gray-400 text-sm">NGOs Mapped</p>
+        </div>
+        <div class="bg-gray-800 border border-gray-700 rounded-xl px-6 py-4 text-center">
+          <p id="count-surveys" class="text-blue-400 text-2xl font-bold">…</p>
+          <p class="text-gray-400 text-sm">Surveys Submitted</p>
+        </div>
+        <div class="bg-gray-800 border border-gray-700 rounded-xl px-6 py-4 text-center">
+          <p id="count-allocations" class="text-purple-400 text-2xl font-bold">—</p>
+          <p class="text-gray-400 text-sm">Allocations Made</p>
+        </div>
+      </div>
+
+      <!-- Success Modal (Hidden initially) -->
+      <div id="success-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-950/80 backdrop-blur-sm hidden">
+        <div class="bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center transform scale-95 transition-transform duration-300">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 mb-6">
+            <svg class="h-8 w-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-bold text-white mb-2">Thank you!</h3>
+          <p class="text-gray-400 mb-6">You've successfully committed to <strong class="text-emerald-400" id="modal-ngo-name">this task</strong>. The organization will be in touch shortly.</p>
+          <button id="close-modal-btn" class="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 py-3 font-semibold text-white transition-colors">
+            Return to Map
+          </button>
+        </div>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-80"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 border-t border-gray-700 text-center py-3 text-gray-600 text-xs">
+      SmartAllocation &copy; 2026 &mdash; Powered by Leaflet, Supabase &amp; Tailwind CSS
+    </footer>
+
+    <!-- Leaflet JS CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Configuration (API Keys - Excluded from Git) -->
+    <script src="config.js"></script>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+  </body>
+</html>
