@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartAllocation | NGO Survey Input</title>
+    <meta name="description" content="SmartAllocation NGO survey input form for submitting resource allocation data." />
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Leaflet CSS CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <!-- PDF.js for extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+
+    <!-- Custom Styles -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class=" text-white min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="sa-nav px-6 py-3 flex items-center justify-between" style="position:relative">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" alt="SmartAllocation Logo" class="w-8 h-8 rounded-lg object-contain">
+        <span class="text-white font-bold text-lg tracking-tight" style="font-family:'Sora',sans-serif">SmartAllocation</span>
+        <span class="text-xs px-2 py-0.5 rounded-full text-xs font-semibold" style="background:rgba(59,130,246,0.1);color:#60a5fa;border:1px solid rgba(59,130,246,0.2)">NGO Survey</span>
+      </div>
+      <button class="hamburger-btn" id="hamburger-btn" onclick="document.getElementById('main-nav-links').classList.toggle('open');this.classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="nav-links flex items-center gap-6" id="main-nav-links">
+        <a href="index.html" class="sa-nav-link">Map Dashboard</a>
+        <a href="ngo.html" class="sa-nav-link active">NGO Survey</a>
+        <a href="register.html" class="sa-nav-link">Register NGO</a>
+        <div id="auth-nav" class="flex items-center gap-2 ml-2 pl-4 border-l" style="border-color:var(--sa-border)">
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col items-center justify-center gap-8 p-8">
+      <div class="text-center">
+        <!-- Removed introductory headers -->
+        <p class="text-white font-bold text-lg mt-2 tracking-wide">Submit resource needs manually or upload real-world reports for AI extraction.</p>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="w-full max-w-2xl flex gap-2 mb-0">
+        <button id="tab-manual" onclick="switchSurveyTab('manual')" class="flex-1 py-2.5 rounded-t-xl text-xs font-bold uppercase tracking-widest transition-all bg-gray-800 border border-gray-700 border-b-0 text-blue-400">Manual Entry</button>
+        <button id="tab-ingestion" onclick="switchSurveyTab('ingestion')" class="flex-1 py-2.5 rounded-t-xl text-xs font-bold uppercase tracking-widest transition-all bg-gray-900 border border-gray-800 border-b-0 text-gray-500 hover:text-white">📂 Data Ingestion (PDF/TXT)</button>
+      </div>
+
+      <!-- Section A: Manual Survey Entry -->
+      <div id="content-survey" class="w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-b-2xl rounded-tr-2xl shadow-xl p-8 flex flex-col gap-6">
+        <h2 class="text-xl font-semibold text-white">Share your Resource Needs</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm text-gray-300" for="ngo-name-select">Select Org</label>
+            <select
+              id="ngo-name-select"
+              class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors text-sm"
+            >
+              <option value="" disabled selected>Loading organizations...</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-sm text-gray-300" for="ngo-region">Region / District (Auto-fill)</label>
+            <input
+              id="ngo-region"
+              type="text"
+              readonly
+              placeholder="Auto-detected"
+              class="bg-gray-950 border border-gray-700 rounded-lg px-4 py-2 text-gray-500 cursor-not-allowed text-sm"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-sm text-gray-300" for="ngo-people">People Affected</label>
+            <input id="ngo-people" type="number" value="1" min="1" class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors text-sm" />
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-sm text-gray-300" for="ngo-category">Primary Category</label>
+            <select id="ngo-category" class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors text-sm">
+                <option value="Healthcare">Healthcare</option>
+                <option value="Environment">Environment</option>
+                <option value="Education">Education</option>
+                <option value="Child Welfare">Child Welfare</option>
+                <option value="Women Rights">Women Rights</option>
+                <option value="Food Security">Food Security</option>
+                <option value="Sanitation">Sanitation</option>
+                <option value="General">General</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-gray-300" for="ngo-needs">Resource Needs</label>
+          <textarea
+            id="ngo-needs"
+            rows="4"
+            placeholder="Describe the resources or support your organization requires..."
+            class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors resize-none text-sm"
+          ></textarea>
+        </div>
+
+        <button
+          id="submit-survey"
+          type="button"
+          class="bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
+        >
+          Submit Survey
+        </button>
+
+        <p id="survey-status" class="text-sm text-gray-500 text-center hidden">Submitting...</p>
+      </div>
+
+      <!-- Section B: Data Ingestion (PDF/TXT) -->
+      <div id="content-ingestion" class="hidden w-full max-w-2xl bg-gray-800 border border-gray-700 rounded-b-2xl rounded-tl-2xl shadow-xl p-8 flex flex-col gap-6">
+        <h2 class="text-xl font-semibold text-white flex items-center gap-2">📂 Data Ingestion Pipeline</h2>
+        <p class="text-xs text-gray-400 -mt-2">Upload field reports, PDF summaries, or TXT logs. Our AI will automatically extract and categorize the needs.</p>
+
+        <div class="flex flex-col gap-1">
+          <label class="text-sm text-gray-300">Target Organization</label>
+          <select id="ingest-ngo-select" class="bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors text-sm">
+            <option value="" disabled selected>Loading organizations...</option>
+          </select>
+        </div>
+
+        <div class="border-2 border-dashed border-gray-700 rounded-2xl p-10 text-center flex flex-col items-center gap-4 hover:border-blue-500/50 transition-all cursor-pointer relative" id="drop-area">
+          <input type="file" id="file-input" class="absolute inset-0 opacity-0 cursor-pointer" accept=".pdf,.txt,.csv" />
+          <div class="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+          </div>
+          <div>
+            <p class="text-sm font-bold text-white">Click or drag report to upload</p>
+            <p class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-black">Supports PDF, TXT, CSV</p>
+          </div>
+        </div>
+
+        <div id="ingest-status-container" class="hidden animate-pulse flex items-center justify-center gap-3 py-4">
+            <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <p id="ingest-status-text" class="text-xs text-blue-400 font-bold uppercase tracking-widest">Processing document...</p>
+        </div>
+      </div>
+
+      <!-- Review/Edit Modal -->
+      <div id="review-modal" class="fixed inset-0 z-[9999] bg-gray-950/90 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl overflow-hidden shadow-2xl">
+            <div class="p-6 border-b border-gray-800">
+                <h3 class="text-lg font-bold text-white">Review AI Extraction</h3>
+                <p class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Verify the structural integrity of extracted data.</p>
+            </div>
+            <div class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Target Organization</label>
+                    <input id="review-ngo-name" type="text" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mt-1 text-sm text-white focus:border-blue-500 outline-none" placeholder="Organization name..." />
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-gray-500 uppercase">Needs Summary</label>
+                    <textarea id="review-needs" rows="3" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mt-1 text-sm text-white focus:border-blue-500 outline-none"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Urgency</label>
+                        <select id="review-urgency" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mt-1 text-sm text-white outline-none">
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Category</label>
+                        <select id="review-category" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mt-1 text-sm text-white outline-none">
+                            <option value="Healthcare">Healthcare</option>
+                            <option value="Environment">Environment</option>
+                            <option value="Education">Education</option>
+                            <option value="Child Welfare">Child Welfare</option>
+                            <option value="Women Rights">Women Rights</option>
+                            <option value="Food Security">Food Security</option>
+                            <option value="Sanitation">Sanitation</option>
+                            <option value="General">General</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Affected People</label>
+                        <input id="review-people" type="number" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mt-1 text-sm text-white outline-none" />
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-bold text-gray-500 uppercase">Location Name</label>
+                        <input id="review-location" type="text" class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2 mt-1 text-sm text-white outline-none" />
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-800 flex gap-4">
+                <button onclick="document.getElementById('review-modal').classList.add('hidden')" class="flex-1 py-3 text-sm font-bold text-gray-500 hover:text-white transition-colors">Cancel</button>
+                <button id="confirm-save-btn" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-bold text-white transition-all shadow-lg shadow-blue-500/20">Finalize & Post</button>
+            </div>
+        </div>
+      </div>
+
+      <!-- Toast Container -->
+      <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-80"></div>
+    </main>
+
+
+
+    <!-- Footer -->
+    <footer class="sa-footer">
+      <div class="sa-footer-grid">
+        <div class="sa-footer-col"><h4>Product</h4><a href="#">Features</a><a href="#">Pricing</a><a href="#">Security</a></div>
+        <div class="sa-footer-col"><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a></div>
+        <div class="sa-footer-col"><h4>Resources</h4><a href="#">Docs</a><a href="#">Support</a><a href="#">API</a></div>
+        <div class="sa-footer-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+      </div>
+      <div class="sa-footer-bottom">
+        <span>&copy; 2026 SmartAllocation. All rights reserved.</span>
+        <div class="sa-footer-social"><a href="#">Twitter</a><a href="#">LinkedIn</a><a href="#">GitHub</a></div>
+      </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

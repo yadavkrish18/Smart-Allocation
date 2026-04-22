@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAllocation | Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'DM Sans', 'Inter', sans-serif; }
+        h1, h2, h3, .font-heading { font-family: 'Sora', sans-serif; }
+        
+        body {
+            background-color: #0a0f1e;
+            background-image: radial-gradient(at 20% 20%, rgba(20, 184, 166, 0.04) 0px, transparent 50%);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .edit-mode input, .edit-mode textarea, .edit-mode select {
+            background: rgba(0,0,0,0.4) !important;
+            border: 1px solid #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen p-6 md:p-12 antialiased flex flex-col items-center">
+
+    <div class="w-full max-w-4xl">
+        <!-- Header -->
+        <header class="mb-14 flex items-center gap-6">
+            <button onclick="window.location.href='index.html'" class="p-2 hover:bg-gray-800 rounded-full transition-colors" style="background:var(--sa-bg-card);border:1px solid var(--sa-border)">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            </button>
+            <div class="flex items-center gap-3">
+                <img src="logo.png" alt="SmartAllocation Logo" class="w-8 h-8 rounded-lg object-contain">
+                <div>
+                    <h1 id="page-title" class="text-2xl font-bold tracking-tight" style="font-family:'Sora',sans-serif">Profile</h1>
+                    <p id="page-subtitle" class="text-xs mt-0.5" style="color:var(--sa-text-muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:600">Role Loading...</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Profile Card (Dynamic Content) -->
+        <div id="profile-container" class="profile-card sa-interactive-card relative group">
+            <button id="edit-profile-btn" class="absolute top-8 right-8 px-4 py-2 border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded-xl text-xs font-bold transition-all">
+                Edit Profile
+            </button>
+
+            <!-- Loading State -->
+            <div id="profile-loading" class="flex flex-col items-center justify-center py-20 gap-4">
+                <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                <p class="text-gray-500 text-sm font-bold uppercase tracking-widest">Accessing Network Profile...</p>
+            </div>
+
+            <!-- NGO PROFILE VIEW -->
+            <div id="view-ngo" class="hidden">
+                <div class="mb-10">
+                    <h2 id="ngo-display-name" class="text-4xl font-black mb-2">Org Name</h2>
+                    <div class="flex items-center gap-4 text-gray-500 text-sm">
+                        <span id="ngo-display-email" class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> email@org.com</span>
+                        <span id="ngo-display-category" class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-bold uppercase tracking-wider">Category</span>
+                        <span id="ngo-display-est" class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Est. 2018</span>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-16">
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-premium-label mb-3">Mission Statement</h3>
+                            <p id="ngo-display-mission" class="text-gray-300 text-sm leading-relaxed">Loading organization mission...</p>
+                        </div>
+                        <div>
+                            <h3 class="text-premium-label mb-3">Location</h3>
+                            <p id="ngo-display-location" class="text-blue-400 text-sm font-bold flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>City, Country</span>
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="text-premium-label mb-3">Website</h3>
+                            <a id="ngo-display-website" href="#" target="_blank" class="text-blue-500 text-sm font-bold hover:underline flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                                <span>www.organization.org</span>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-premium-label mb-3">Focus Areas</h3>
+                            <div id="ngo-display-focus" class="flex flex-wrap">
+                                <!-- Tags -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- VOLUNTEER PROFILE VIEW -->
+            <div id="view-volunteer" class="hidden">
+                <div class="mb-10">
+                    <h2 id="vol-display-name" class="text-4xl font-black mb-2">Volunteer</h2>
+                    <div class="flex items-center gap-4 text-gray-500 text-sm">
+                        <span id="vol-display-email" class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> email@domain.com</span>
+                        <span id="vol-display-rating" class="flex items-center gap-2 text-yellow-500 font-bold">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg> 
+                            <span>4.8 rating (24 reviews)</span>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-10">
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-premium-label mb-3">Location</h3>
+                            <p id="vol-display-location" class="text-blue-400 text-sm font-bold flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span>City, Country</span>
+                            </p>
+                        </div>
+                        <div>
+                            <h3 class="text-premium-label mb-3">Availability</h3>
+                            <div class="space-y-3">
+                                <label class="flex items-center gap-3 cursor-default opacity-80">
+                                    <input type="checkbox" id="vol-chk-weekdays" disabled class="checkbox-custom">
+                                    <span class="text-xs font-medium text-gray-300">Weekdays (9 AM - 5 PM)</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-default opacity-80">
+                                    <input type="checkbox" id="vol-chk-weekends" disabled class="checkbox-custom">
+                                    <span class="text-xs font-medium text-gray-300">Weekends (Flexible)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-8">
+                        <div>
+                            <h3 class="text-premium-label mb-3">Skills & Expertise</h3>
+                            <div id="vol-display-skills" class="flex flex-wrap">
+                                <!-- Tags -->
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-premium-label mb-3">Languages</h3>
+                            <div id="vol-display-languages" class="flex flex-wrap">
+                                <!-- Tags -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EDIT FORM (Universal - shown when Edit Profile is clicked) -->
+            <div id="edit-form-container" class="hidden">
+                <form id="profile-edit-form" class="space-y-8">
+                    <!-- Fields will be dynamically injected here for editing -->
+                    <div id="edit-fields-mount" class="grid md:grid-cols-2 gap-8"></div>
+                    <div class="flex gap-4 border-t border-gray-800 pt-8 mt-8">
+                        <button type="button" id="cancel-edit-btn" class="flex-1 py-3 border border-gray-700 rounded-xl font-bold hover:bg-gray-800 transition-colors">Cancel</button>
+                        <button type="submit" id="save-profile-btn" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div id="stats-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            <div class="stat-card">
+                <h3 id="stat-1-label" class="text-premium-label mb-1">Tasks Completed</h3>
+                <p id="stat-1-val" class="text-4xl font-black text-white">0</p>
+                <p id="stat-1-desc" class="text-[10px] text-gray-600 mt-2 font-bold uppercase tracking-wider">+0 this month</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="stat-2-label" class="text-premium-label mb-1">Total Hours</h3>
+                <p id="stat-2-val" class="text-4xl font-black text-white">0</p>
+                <p id="stat-2-desc" class="text-[10px] text-gray-600 mt-2 font-bold uppercase tracking-wider">Contributed to community</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="stat-3-label" class="text-premium-label mb-1">Impact Score</h3>
+                <p id="stat-3-val" class="text-4xl font-black text-white">0</p>
+                <p id="stat-3-desc" class="text-[10px] text-gray-600 mt-2 font-bold uppercase tracking-wider">Based on tasks & ratings</p>
+            </div>
+        </div>
+
+        <!-- Recent Activity Section -->
+        <div id="activity-section" class="mt-12 opacity-0 transform translate-y-4 transition-all duration-700">
+            <h3 class="text-xl font-black text-white mb-6 flex items-center gap-3">
+                Recent Activity
+            </h3>
+            <div id="activity-list" class="bg-gray-900/40 border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
+                <!-- Activity Items -->
+                <div class="p-8 text-center text-gray-600 text-sm">
+                    Accessing historical activity data...
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-80"></div>
+    </div>
+
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="profile.js"></script>
+
+</body>
+</html>

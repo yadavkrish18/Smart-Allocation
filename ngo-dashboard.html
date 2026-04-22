@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAllocation | NGO Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'DM Sans', 'Inter', sans-serif; background-color: #0a0f1e; }
+        h1, h2, h3, .font-heading { font-family: 'Sora', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="text-white min-h-screen flex flex-col antialiased">
+
+    <!-- Navbar -->
+    <header class="sa-nav px-6 py-3 flex items-center justify-between" style="position:relative">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" alt="SmartAllocation Logo" class="w-8 h-8 rounded-lg object-contain">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300 font-bold text-lg tracking-tight" style="font-family:'Sora',sans-serif">SmartAllocation</span>
+        
+      </div>
+      <button class="hamburger-btn" id="hamburger-btn" onclick="document.getElementById('main-nav-links').classList.toggle('open');this.classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="nav-links flex items-center gap-6" id="main-nav-links">
+        <a href="index.html" class="sa-nav-link">Map Dashboard</a>
+        <a href="ngo-dashboard.html" class="sa-nav-link active">NGO Dashboard</a>
+        <div id="auth-nav" class="flex items-center gap-2 ml-2 pl-4 border-l" style="border-color:var(--sa-border)">
+        </div>
+      </nav>
+    </header>
+
+    <!-- Global Priority Alert Bar (Align according to page) -->
+    <div id="global-priority-ticker" class="hidden bg-red-600/10 border-b border-red-500/20 px-6 py-2 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="flex h-2 w-2 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+        </span>
+        <span class="text-[10px] font-black text-red-400 uppercase tracking-[0.2em]">Global Priority Alert</span>
+        <span id="priority-ticker-msg" class="text-xs text-white font-medium truncate max-w-2xl"></span>
+      </div>
+      <a href="index.html" class="text-[9px] font-bold text-red-400 hover:text-white uppercase tracking-widest border border-red-500/30 px-3 py-1 rounded-md transition-all">View Map →</a>
+    </div>
+
+    <main class="flex-1 p-6 md:p-12 pb-32 max-w-7xl mx-auto w-full fade-in space-y-12 ngo-main-shell">
+      <!-- Stats Row -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 ngo-stats-grid">
+        <div class="stat-card sa-interactive-card text-center">
+          <p id="stat-total" class="text-3xl font-black text-white">0</p>
+          <p class="sa-eyebrow mt-1">Project Scope</p>
+        </div>
+        <div class="stat-card sa-interactive-card text-center">
+          <p id="stat-active" class="text-3xl font-black text-emerald-400">0</p>
+          <p class="sa-eyebrow mt-1">Ready Assets</p>
+        </div>
+        <div class="stat-card sa-interactive-card text-center">
+          <p id="stat-progress" class="text-3xl font-black text-blue-400">0</p>
+          <p class="sa-eyebrow mt-1">Live Missions</p>
+        </div>
+        <div class="stat-card sa-interactive-card text-center">
+          <p id="stat-resolved" class="text-3xl font-black text-purple-400">0</p>
+          <p class="sa-eyebrow mt-1">Completed Impacts</p>
+        </div>
+      </div>
+
+      <!-- Tab Navigation -->
+      <div class="flex items-center gap-8 border-b border-gray-800 mb-10 ngo-tabbar">
+        <button id="tab-btn-needs" onclick="switchTab('needs')" class="dash-tab-btn py-3 text-sm font-bold border-b-2 border-emerald-400 text-emerald-400 transition-all" style="min-height:44px">
+          📋 Mission Control
+        </button>
+        <button id="tab-btn-volunteers" onclick="switchTab('volunteers')" class="dash-tab-btn py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 transition-all" style="min-height:44px">
+          👥 Talent Orchard
+        </button>
+        <button id="tab-btn-analytics" onclick="switchTab('analytics')" class="dash-tab-btn py-3 text-sm font-bold border-b-2 border-transparent text-gray-500 transition-all" style="min-height:44px">
+          📊 Impact Intelligence
+        </button>
+        <a href="ngo.html" class="ml-auto px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold transition-all shadow-lg shadow-emerald-600/20" style="min-height:44px;display:flex;align-items:center">+ Post New Need</a>
+      </div>
+
+      <!-- Tab: Needs Board (Kanban - FIX 6) -->
+      <div id="tab-content-needs" class="dash-tab-content">
+        <div id="kanban-board" class="kanban-board">
+          <!-- Open Column -->
+          <div class="kanban-col">
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Available Support</h3>
+            </div>
+            <div id="col-open-drop" class="kanban-col-drop min-h-[100px]">
+              <div id="col-open">
+                <div class="animate-pulse bg-gray-800/40 rounded-xl p-4 h-20 mb-2"></div>
+              </div>
+            </div>
+          </div>
+          <!-- In Progress Column -->
+          <div class="kanban-col">
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Active Operations</h3>
+            </div>
+            <div id="col-in-progress-drop" class="kanban-col-drop min-h-[100px]">
+              <div id="col-in-progress">
+                <div class="animate-pulse bg-gray-800/40 rounded-xl p-4 h-20 mb-2"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Resolved Column -->
+          <div class="kanban-col">
+            <div class="flex items-center gap-2 mb-4">
+              <div class="w-2 h-2 bg-purple-400 rounded-full"></div>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Mission Accomplished</h3>
+            </div>
+            <div id="col-resolved-drop" class="kanban-col-drop min-h-[100px]">
+              <div id="col-resolved">
+                <div class="animate-pulse bg-gray-800/40 rounded-xl p-4 h-20 mb-2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tab: Find Volunteers (FIX 3) -->
+      <div id="tab-content-volunteers" class="dash-tab-content hidden">
+        <div class="mb-4">
+          <input id="vol-search-input" type="text" placeholder="Search by name, skills, or location..."
+            class="w-full max-w-md bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 sa-input-modern"
+            style="min-height:44px">
+        </div>
+        <div id="volunteers-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="text-gray-500 text-sm text-center py-8 col-span-2">Click "Find Volunteers" tab to load volunteers.</div>
+        </div>
+      </div>
+
+      <!-- Tab: Impact Analytics (Phase 4) -->
+      <div id="tab-content-analytics" class="dash-tab-content hidden">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl sa-glass-card">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total People Helped</p>
+                <p id="ana-people" class="text-3xl font-black text-white">0</p>
+                <div class="mt-2 text-[10px] text-emerald-400 flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z"></path></svg>
+                    Real-time Impact
+                </div>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl sa-glass-card">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Avg Response Time</p>
+                <p id="ana-response" class="text-3xl font-black text-blue-400">0h</p>
+                <p class="mt-2 text-[10px] text-gray-600">Created to Assignment</p>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl sa-glass-card">
+                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Resolution Success Rate</p>
+                <p id="ana-success" class="text-3xl font-black text-purple-400">0%</p>
+                <p class="mt-2 text-[10px] text-gray-600">Resolved vs Total</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl sa-glass-card">
+                <h3 class="text-sm font-bold text-white mb-6 uppercase tracking-wider">Demand Trends (Needs Over Time)</h3>
+                <div class="h-64">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="bg-gray-900 border border-gray-800 p-6 rounded-2xl sa-glass-card">
+                <h3 class="text-sm font-bold text-white mb-6 uppercase tracking-wider">Resource Allocation by Category</h3>
+                <div class="h-64">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-black/40 border border-white/5 rounded-2xl p-6 sa-glass-card">
+            <h3 class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-4">💡 AI Intelligence Insights</h3>
+            <div id="ai-insights" class="space-y-3">
+                <div class="text-sm text-gray-300 animate-pulse">Analyzing impact data and generating strategic insights...</div>
+            </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-80"></div>
+
+    <!-- Rating Modal -->
+    <div id="rating-modal" class="fixed inset-0 z-[9999] bg-gray-950/90 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+      <div class="bg-gray-900 border border-gray-800/50 rounded-2xl w-full max-w-sm p-8 shadow-2xl text-center sa-modal-card">
+        <h3 class="text-xl font-bold text-white mb-2">Rate this Volunteer</h3>
+        <p class="text-xs text-gray-500 mb-6">How was the volunteer's contribution?</p>
+        <div id="rating-stars" class="flex justify-center gap-2 mb-6">
+          <button onclick="setRating(1)" class="rating-star text-3xl text-gray-600 hover:text-yellow-400 transition-colors" style="min-height:44px">★</button>
+          <button onclick="setRating(2)" class="rating-star text-3xl text-gray-600 hover:text-yellow-400 transition-colors" style="min-height:44px">★</button>
+          <button onclick="setRating(3)" class="rating-star text-3xl text-gray-600 hover:text-yellow-400 transition-colors" style="min-height:44px">★</button>
+          <button onclick="setRating(4)" class="rating-star text-3xl text-gray-600 hover:text-yellow-400 transition-colors" style="min-height:44px">★</button>
+          <button onclick="setRating(5)" class="rating-star text-3xl text-gray-600 hover:text-yellow-400 transition-colors" style="min-height:44px">★</button>
+        </div>
+        <textarea id="rating-comment" placeholder="Optional comment..." rows="2" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-sm text-white mb-4 outline-none focus:border-emerald-500"></textarea>
+        <button id="submit-rating-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold text-white transition-all" style="min-height:44px">Submit Rating</button>
+        <button onclick="document.getElementById('rating-modal').classList.add('hidden')" class="mt-3 w-full py-2 text-gray-500 text-xs hover:text-white transition-colors" style="min-height:44px">Skip</button>
+      </div>
+    </div>
+
+    <!-- Edit Survey Modal -->
+    <div id="edit-survey-modal" class="fixed inset-0 z-[9999] bg-gray-950/90 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+      <div class="bg-gray-900 border border-gray-800/50 rounded-2xl w-full max-w-md p-8 shadow-2xl sa-modal-card">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-white">Edit Mission Need</h3>
+          <button onclick="document.getElementById('edit-survey-modal').classList.add('hidden')" aria-label="Close edit need dialog" class="text-gray-500 hover:text-white" style="min-height:44px;min-width:44px">✕</button>
+        </div>
+        <input type="hidden" id="edit-survey-id">
+        <div class="space-y-6">
+          <div>
+            <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Needs Description</label>
+            <textarea id="edit-needs-text" rows="4" class="w-full bg-black/40 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500 transition-all"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Urgency Level</label>
+              <select id="edit-urgency-level" class="w-full bg-black/40 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500 transition-all" style="min-height:44px">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">People Affected</label>
+              <input type="number" id="edit-people-affected" class="w-full bg-black/40 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500 transition-all" style="min-height:44px">
+            </div>
+          </div>
+          <div>
+            <label class="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Category</label>
+            <select id="edit-category" class="w-full bg-black/40 border border-gray-800 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald-500 transition-all" style="min-height:44px">
+              <option value="Healthcare">Healthcare</option>
+              <option value="Food Security">Food Security</option>
+              <option value="Education">Education</option>
+              <option value="Environment">Environment</option>
+              <option value="Child Welfare">Child Welfare</option>
+              <option value="Women Rights">Women Rights</option>
+              <option value="Sanitation">Sanitation</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-8 flex gap-3">
+          <button id="save-edit-btn" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-4 rounded-2xl font-bold text-white shadow-lg transition-all" style="min-height:44px">Save Changes</button>
+          <button onclick="document.getElementById('edit-survey-modal').classList.add('hidden')" class="px-6 bg-gray-800 hover:bg-gray-700 py-4 rounded-2xl font-bold text-gray-400 transition-all" style="min-height:44px">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FIX 3: Invite Modal -->
+    <div id="invite-modal" class="fixed inset-0 z-[9999] bg-gray-950/90 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+      <div class="bg-gray-900 border border-gray-800/50 rounded-2xl w-full max-w-md p-8 shadow-2xl sa-modal-card">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-white">Invite Volunteer</h3>
+          <button onclick="document.getElementById('invite-modal').classList.add('hidden')" aria-label="Close invite volunteer dialog" class="text-gray-500 hover:text-white" style="min-height:44px;min-width:44px">✕</button>
+        </div>
+        <div class="bg-gray-800/50 rounded-xl p-4 mb-6">
+          <p class="font-bold text-white text-sm" id="invite-vol-name">Volunteer Name</p>
+          <p class="text-xs text-gray-400 mt-1 line-clamp-2" id="invite-vol-skills"></p>
+        </div>
+        <div class="mb-4">
+          <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-2">Select Survey *</label>
+          <select id="invite-survey-select" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500" style="min-height:44px">
+            <option value="">Loading...</option>
+          </select>
+        </div>
+        <div class="mb-6">
+          <label class="text-[9px] font-bold text-gray-500 uppercase tracking-wider block mb-2">Personal Message (Optional)</label>
+          <textarea id="invite-message" rows="3" placeholder="e.g. We think your skills are a great match for this task..." class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+        <button id="submit-invite-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-bold text-white transition-all" style="min-height:44px">Send Invitation</button>
+      </div>
+    </div>
+
+    <!-- Volunteer Assignment Modal -->
+    <div id="assign-volunteer-modal" class="fixed inset-0 z-[9999] bg-gray-950/90 backdrop-blur-xl flex items-center justify-center p-4 hidden">
+      <div class="bg-gray-900 border border-gray-800/50 rounded-2xl w-full max-w-lg p-8 shadow-2xl sa-modal-card">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold text-white">Assign Volunteer</h3>
+          <button id="close-assign-modal-btn" aria-label="Close assign volunteer dialog" class="text-gray-500 hover:text-white" style="min-height:44px;min-width:44px">✕</button>
+        </div>
+        <p class="text-xs text-gray-500 mb-4">Select one available volunteer to move this task to In Progress.</p>
+        <div id="assign-volunteer-list" class="space-y-2 max-h-72 overflow-y-auto pr-1"></div>
+        <div class="mt-6 flex justify-end">
+          <button id="cancel-assign-modal-btn" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-xs font-bold uppercase tracking-wider">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chat Slide-out Panel -->
+    <div id="chat-panel" class="fixed right-0 top-0 h-full w-96 bg-gray-900 border-l border-gray-800 shadow-2xl z-[9998] transform translate-x-full transition-transform duration-300 flex flex-col">
+      <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Need Chat</h3>
+        <button onclick="closeChatPanel()" aria-label="Close chat panel" class="text-gray-500 hover:text-white transition-colors" style="min-height:44px;min-width:44px">
+          <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+      <div class="p-4 border-t border-gray-800 flex gap-2">
+        <input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-emerald-500" style="min-height:44px">
+        <button id="chat-send-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-xs font-bold text-white transition-all" style="min-height:44px">Send</button>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="sa-footer">
+      <div class="sa-footer-grid">
+        <div class="sa-footer-col"><h4>Product</h4><a href="#">Features</a><a href="#">Pricing</a><a href="#">Security</a></div>
+        <div class="sa-footer-col"><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a></div>
+        <div class="sa-footer-col"><h4>Resources</h4><a href="#">Docs</a><a href="#">Support</a><a href="#">API</a></div>
+        <div class="sa-footer-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+      </div>
+      <div class="sa-footer-bottom">
+        <span>&copy; 2026 SmartAllocation. All rights reserved.</span>
+        <div class="sa-footer-social"><a href="#">Twitter</a><a href="#">LinkedIn</a><a href="#">GitHub</a></div>
+      </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="ngo-dashboard.js"></script>
+    <script src="chat.js"></script>
+    <script>
+      // FIX 9d: Hamburger toggle
+      function toggleNav() {
+        const btn = document.getElementById('hamburger-btn');
+        const nav = document.getElementById('main-nav-links');
+        btn.classList.toggle('open');
+        nav.classList.toggle('open');
+      }
+    </script>
+</body>
+</html>

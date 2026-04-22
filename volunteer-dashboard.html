@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartAllocation | Volunteer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+        .volunteer-gradient { background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(17, 24, 39, 1) 100%); }
+        .leaflet-container img { max-width: none !important; width: auto !important; height: auto !important; }
+        @keyframes pulseRed {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,0,0,0.7); }
+          50% { box-shadow: 0 0 0 12px rgba(255,0,0,0); }
+        }
+        .pulse-red { animation: pulseRed 1.5s infinite; border-radius: 50%; }
+    </style>
+  </head>
+  <body class=" text-white min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="sa-nav px-6 py-3 flex items-center justify-between" style="position:relative">
+      <div class="flex items-center gap-3">
+        <img src="logo.png" alt="SmartAllocation Logo" class="w-8 h-8 rounded-lg object-contain">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-emerald-300 font-bold text-lg tracking-tight" style="font-family:'Sora',sans-serif">SmartAllocation</span>
+      </div>
+      <button class="hamburger-btn" id="hamburger-btn" onclick="document.getElementById('main-nav-links').classList.toggle('open');this.classList.toggle('open')">
+        <span></span><span></span><span></span>
+      </button>
+      <nav class="nav-links flex items-center gap-6" id="main-nav-links">
+        <a href="index.html" class="sa-nav-link">Map Dashboard</a>
+        <a href="volunteer-dashboard.html" class="sa-nav-link active">Volunteer Dashboard</a>
+        <div id="auth-nav" class="flex items-center gap-2 ml-2 pl-4 border-l" style="border-color:var(--sa-border)"></div>
+      </nav>
+    </header>
+
+    <!-- FIX 9a: Main grid stacks on mobile -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden volunteer-main-shell">
+
+      <!-- Left Panel -->
+      <aside class="lg:col-span-3 border-r border-gray-800 p-6 flex flex-col gap-4 volunteer-gradient overflow-y-auto sa-panel">
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="sa-interactive-card bg-gray-800/50 border border-gray-700/50 rounded-xl p-3 text-center sa-kpi-chip">
+            <p id="vol-stat-tasks" class="text-xl font-black text-white">0</p>
+            <p class="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Tasks</p>
+          </div>
+          <div class="sa-interactive-card bg-gray-800/50 border border-gray-700/50 rounded-xl p-3 text-center sa-kpi-chip">
+            <p id="vol-stat-hours" class="text-xl font-black text-blue-400">0</p>
+            <p class="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Hours</p>
+          </div>
+          <div class="sa-interactive-card bg-gray-800/50 border border-gray-700/50 rounded-xl p-3 text-center sa-kpi-chip">
+            <p id="vol-stat-score" class="text-xl font-black text-emerald-400">0</p>
+            <p class="text-[8px] text-gray-500 font-bold uppercase tracking-wider">Impact</p>
+          </div>
+        </div>
+
+        <!-- Invitations Section (Inbox) -->
+        <div id="invites-section" class="bg-gray-900/60 border border-emerald-500/30 rounded-2xl p-5 shadow-2xl relative overflow-hidden group sa-glass-card">
+          <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all"></div>
+          <h3 class="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Pending Invitations
+            <span id="invite-badge" class="ml-auto bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full hidden">0</span>
+          </h3>
+          <div id="invites-list" class="space-y-3">
+             <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest text-center py-4">Your inbox is empty.</p>
+          </div>
+        </div>
+
+        <!-- FIX 2: Recommended For You Section -->
+        <div id="recommended-section" class="hidden">
+          <h3 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+            <span class="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></span>
+            Recommended For You
+          </h3>
+          <div id="recommended-list" class="space-y-2"></div>
+        </div>
+
+        <!-- My Contributions -->
+        <div>
+          <h2 class="sa-panel-title flex items-center gap-2 mb-1">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 114 0v2m-4 0H5a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V10a2 2 0 00-2-2h-3"/></svg>
+            My Journey
+          </h2>
+          <div class="flex gap-4 mt-4 border-b border-gray-800">
+            <button onclick="window.switchContributionTab('active')" id="tab-btn-active" class="pb-2 text-[10px] font-black uppercase tracking-widest border-b-2 border-blue-500 text-blue-400 transition-all">Active</button>
+            <button onclick="window.switchContributionTab('history')" id="tab-btn-history" class="pb-2 text-[10px] font-black uppercase tracking-widest border-gray-600 text-gray-500 hover:text-white transition-all">History</button>
+          </div>
+        </div>
+        <div id="active-list" class="space-y-4">
+          <div id="my-commitments-list" class="space-y-4">
+            <div class="animate-pulse bg-gray-800/40 rounded-xl p-4 h-24"></div>
+          </div>
+        </div>
+        <div id="history-list" class="space-y-4 hidden">
+          <div id="my-history-list" class="space-y-4">
+             <p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest text-center py-4">No completed tasks yet.</p>
+          </div>
+        </div>
+        <div class="mt-auto pt-6 border-t border-gray-800">
+          <div class="bg-blue-600/10 border border-blue-500/20 rounded-2xl p-4">
+            <h3 class="text-sm font-bold text-blue-400 mb-1">Impact Tip</h3>
+            <p class="text-xs text-gray-400 leading-relaxed">Regular updates on your committed tasks help NGOs coordinate better.</p>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Center: Map (FIX 9b: 55vh on mobile) -->
+      <div class="lg:col-span-6 relative bg-gray-900 border-r border-gray-800 sa-map-shell volunteer-map-shell" style="min-height:300px">
+        <div id="map" class="h-full w-full" style="min-height:300px"></div>
+        <div class="absolute top-6 left-1/2 -translate-x-1/2 w-[90%] z-[1001]">
+          <div class="bg-gray-900/90 backdrop-blur-xl border border-gray-700/50 rounded-2xl p-2 shadow-2xl flex items-center gap-2 sa-panel-soft">
+            <div class="flex-1 relative">
+              <input id="smart-search-input" type="text" placeholder="I have donations or skills to offer..."
+                class="w-full bg-transparent border-none px-4 py-2 text-sm text-white focus:outline-none placeholder:text-gray-500"
+                style="min-height:44px">
+            </div>
+            <!-- FIX 7: Use my profile button -->
+            <button id="use-profile-btn" title="Auto-fill from my profile"
+              class="text-[10px] font-bold text-blue-400 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg transition-all border border-blue-500/20 whitespace-nowrap hidden"
+              style="min-height:44px">
+              Use Profile
+            </button>
+            <button id="smart-search-btn" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs shadow-lg shadow-blue-600/20 transition-all flex items-center gap-2" style="min-height:44px">
+              <svg id="search-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <svg id="search-spinner" class="animate-spin h-4 w-4 hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <span>Match</span>
+            </button>
+          </div>
+          <p id="search-status" class="text-[10px] text-center mt-2 text-gray-500"></p>
+        </div>
+      </div>
+
+      <!-- Right Panel -->
+      <aside class="lg:col-span-3 p-6 bg-gray-950 flex flex-col gap-6 overflow-y-auto sa-panel">
+        <div>
+          <h2 class="sa-panel-title flex items-center gap-2 mb-1">
+            <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Highest Priority
+          </h2>
+          <p class="sa-panel-subtitle">Immediate assistance required.</p>
+        </div>
+        <div id="urgent-needs-sidebar" class="space-y-4"></div>
+      </aside>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[2000] flex items-center justify-center p-6 hidden">
+      <div class="bg-gray-900 border border-blue-500/30 w-full max-w-md rounded-3xl p-8 text-center shadow-2xl sa-modal-card">
+        <div class="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
+          <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </div>
+        <h3 class="text-2xl font-extrabold text-white mb-2">Pledged!</h3>
+        <p class="text-gray-400 mb-8">Thank you for contributing to <span id="modal-ngo-name" class="text-blue-400 font-bold"></span>.</p>
+        <button id="close-modal-btn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-lg transition-all" style="min-height:44px">Back to Dashboard</button>
+      </div>
+    </div>
+
+    <!-- Chat Panel -->
+    <div id="chat-panel" class="fixed right-0 top-0 h-full w-96 bg-gray-900 border-l border-gray-800 shadow-2xl z-[9998] transform translate-x-full transition-transform duration-300 flex flex-col">
+      <div class="p-4 border-b border-gray-800 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-white">Need Chat</h3>
+        <button onclick="closeChatPanel()" aria-label="Close chat panel" class="text-gray-500 hover:text-white" style="min-height:44px;min-width:44px">
+          <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+      <div class="p-4 border-t border-gray-800 flex gap-2">
+        <input id="chat-input" type="text" placeholder="Type a message..." class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-sm text-white outline-none focus:border-blue-500" style="min-height:44px">
+        <button id="chat-send-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold text-white transition-all" style="min-height:44px">Send</button>
+      </div>
+    </div>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none w-80"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="utils.js"></script>
+    <script src="app.js"></script>
+    <script src="chat.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        if (typeof CONFIG === 'undefined') return;
+        const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) { window.location.href = 'login.html'; return; }
+
+        // Load volunteer stats
+        const { data: vol } = await sb.from('volunteer_details')
+          .select('tasks_completed, total_hours, impact_score, skills_summary, volunteer_reliability, lat, lng')
+          .eq('user_id', session.user.id).single();
+
+        if (vol) {
+          window._volData = vol; // Store for matching
+          document.getElementById('vol-stat-tasks').textContent = vol.tasks_completed || 0;
+          document.getElementById('vol-stat-hours').textContent = vol.total_hours || 0;
+          document.getElementById('vol-stat-score').textContent = vol.impact_score || 0;
+
+          // FIX 7: Show "Use Profile" button if volunteer has skills
+          if (vol.skills_summary) {
+            window._volunteerSkillsSummary = vol.skills_summary;
+            const useBtn = document.getElementById('use-profile-btn');
+            if (useBtn) useBtn.classList.remove('hidden');
+            const searchInput = document.getElementById('smart-search-input');
+            if (searchInput) searchInput.placeholder = vol.skills_summary;
+          }
+        }
+
+        // FIX 4: Load pending invitations with Realtime
+        async function loadInvitations() {
+          const { data: invites } = await sb
+            .from('invitations')
+            .select('id, survey_id, message, created_at, ngo_user_id')
+            .eq('volunteer_user_id', session.user.id)
+            .eq('status', 'pending');
+
+          const list = document.getElementById('invites-list');
+          const badge = document.getElementById('invite-badge');
+
+          if (invites && invites.length > 0) {
+            badge.textContent = invites.length;
+            badge.classList.remove('hidden');
+            
+            // Sync global navbar badge if it exists
+            const navBadge = document.getElementById('nav-inbox-badge');
+            if (navBadge) {
+              navBadge.textContent = invites.length;
+              navBadge.classList.remove('hidden');
+            }
+
+            // Fetch NGO names for each invite
+            const enriched = await Promise.all(invites.map(async inv => {
+              const { data: surveyData } = await sb.from('surveys').select('ngo_name, needs').eq('id', inv.survey_id).single();
+              return { ...inv, ngo_name: surveyData?.ngo_name || 'Unknown NGO', needs: surveyData?.needs || '' };
+            }));
+
+            list.innerHTML = enriched.map(inv => `
+              <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 hover:border-emerald-500/30 transition-all">
+                <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">${escapeHtml(inv.ngo_name)}</p>
+                <p class="text-[11px] text-gray-400 leading-relaxed italic border-l-2 border-emerald-500/20 pl-3">"${escapeHtml(inv.message || inv.needs)}"</p>
+                <div class="flex gap-2 mt-4">
+                  <button onclick="respondInvite('${inv.id}','${inv.survey_id}','accepted')"
+                    class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-[10px] font-bold text-white transition-all shadow-lg shadow-emerald-600/10"
+                    style="min-height:36px">Accept Need</button>
+                  <button onclick="respondInvite('${inv.id}','${inv.survey_id}','declined')"
+                    class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-[10px] font-bold text-gray-500 hover:text-gray-300 transition-all border border-gray-700"
+                    style="min-height:36px">Decline</button>
+                </div>
+              </div>
+            `).join('');
+          } else {
+            badge.classList.add('hidden');
+            list.innerHTML = `<p class="text-[10px] text-gray-600 font-bold uppercase tracking-widest text-center py-4">Your inbox is empty.</p>`;
+          }
+        }
+
+        loadInvitations();
+
+        // FIX 4: Realtime subscription for invitations
+        sb.channel('invites-realtime')
+          .on('postgres_changes', {
+            event: 'INSERT', schema: 'public', table: 'invitations',
+            filter: `volunteer_user_id=eq.${session.user.id}`
+          }, () => {
+            loadInvitations();
+            // Show toast for new invite
+            const container = document.getElementById('toast-container');
+            if (container) {
+              const t = document.createElement('div');
+              t.className = 'p-4 rounded-xl shadow-lg text-sm text-white font-medium bg-yellow-500 pointer-events-auto';
+              t.textContent = '📬 You have a new invitation!';
+              container.appendChild(t);
+              setTimeout(() => t.remove(), 5000);
+            }
+          })
+          .subscribe();
+
+        window.respondInvite = async (invId, surveyId, response) => {
+          await sb.from('invitations').update({ status: response }).eq('id', invId);
+          if (response === 'accepted') {
+            await sb.from('surveys').update({
+              is_available: false, committed_by: session.user.id, status: 'in_progress'
+            }).eq('id', surveyId);
+          }
+          loadInvitations();
+          window.loadMyCommitments && window.loadMyCommitments(session.user.id);
+        };
+
+        // FIX 2: Auto-match on page load if volunteer has skills
+        if (vol && vol.skills_summary) {
+          setTimeout(async () => {
+            if (window._runAutoMatch) {
+              await window._runAutoMatch(vol.skills_summary);
+            }
+          }, 2000);
+
+          // Also populate recommended section
+          loadRecommended(vol.skills_summary, session.user.id, vol);
+        }
+
+        // FIX 2: Load recommended matches
+        async function loadRecommended(skillsSummary, userId, volData = null) {
+          if (!window.getEmbedding) return;
+          try {
+            const embedding = await getEmbedding(skillsSummary);
+            const rpcParams = {
+              query_embedding: embedding,
+              match_threshold: 0.65,
+              match_count: 5
+            };
+
+            if (volData) {
+              if (volData.lat) rpcParams.v_lat = volData.lat;
+              if (volData.lng) rpcParams.v_lng = volData.lng;
+              if (volData.volunteer_reliability) rpcParams.v_reliability = volData.volunteer_reliability;
+            }
+
+            const { data: matches } = await sb.rpc('match_surveys', rpcParams);
+
+            if (!matches || matches.length === 0) return;
+
+            const section = document.getElementById('recommended-section');
+            const list = document.getElementById('recommended-list');
+            section.classList.remove('hidden');
+
+            list.innerHTML = matches.map(m => `
+              <div class="match-card">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-bold text-blue-400">${escapeHtml(m.ngo_name)}</p>
+                    <p class="text-[10px] text-gray-500">📍 ${escapeHtml(m.region)}</p>
+                    <p class="text-[10px] text-gray-300 mt-1 line-clamp-2">"${escapeHtml(m.needs)}"</p>
+                  </div>
+                  <span class="text-[10px] font-black text-emerald-400 flex-shrink-0">${Math.round(m.similarity * 100)}%</span>
+                </div>
+                <div class="match-score-bar">
+                  <div class="match-score-fill" style="width:${Math.round(m.similarity * 100)}%"></div>
+                </div>
+                <button onclick="window.commitToTask('${m.survey_id}', '${(m.ngo_name || '').replace(/'/g, "\\'")}')"
+                  class="mt-2 w-full py-1.5 bg-blue-600/10 hover:bg-blue-600 border border-blue-500/20 text-blue-400 hover:text-white text-[9px] font-bold uppercase rounded-lg transition-all"
+                  style="min-height:36px">
+                  Commit to Need
+                </button>
+              </div>
+            `).join('');
+          } catch (e) {
+            console.warn('Auto-match failed:', e);
+          }
+        }
+      });
+    </script>
+    <!-- Footer -->
+    <footer class="sa-footer">
+      <div class="sa-footer-grid">
+        <div class="sa-footer-col"><h4>Product</h4><a href="#">Features</a><a href="#">Pricing</a><a href="#">Security</a></div>
+        <div class="sa-footer-col"><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Careers</a></div>
+        <div class="sa-footer-col"><h4>Resources</h4><a href="#">Docs</a><a href="#">Support</a><a href="#">API</a></div>
+        <div class="sa-footer-col"><h4>Legal</h4><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a></div>
+      </div>
+      <div class="sa-footer-bottom">
+        <span>&copy; 2026 SmartAllocation. All rights reserved.</span>
+        <div class="sa-footer-social"><a href="#">Twitter</a><a href="#">LinkedIn</a><a href="#">GitHub</a></div>
+      </div>
+    </footer>
+  </body>
+</html>
