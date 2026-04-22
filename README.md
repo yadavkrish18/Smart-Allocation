@@ -74,7 +74,7 @@ git clone https://github.com/your-username/smart-allocation.git
 cd smart-allocation
 ```
 
-**2. Create `config.js` in the project root**
+**2. Create `config.template.js` in the project root**
 ```js
 window.CONFIG = {
   SUPABASE_URL: "https://your-project.supabase.co",
